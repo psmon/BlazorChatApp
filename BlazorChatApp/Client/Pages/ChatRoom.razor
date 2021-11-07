@@ -1,0 +1,211 @@
+﻿@page "/chatroom"
+@using Blazor.Extensions; 
+@using Blazor.Extensions.Canvas
+@using Blazor.Extensions.Canvas.Canvas2D;
+@using Microsoft.AspNetCore.SignalR.Client
+@using BlazorChatApp.Shared;
+@using BlazorChatApp.Client.Model;
+@implements IAsyncDisposable
+@inject IJSRuntime JsRuntime;
+
+<p>MyName: @Name , RoomName : @RoomName </p>
+<button @onclick="KeyUp">
+    Up
+</button>
+<button @onclick="KeyDown">
+    Down
+</button>
+<button @onclick="KeyLeft">
+    Left
+</button>
+<button @onclick="KeyRight">
+    Right
+</button>
+
+<div id="canvasHolder" style="position: fixed; width: 80%; height: 80%" >
+    <BECanvas Width="600" Height="400" @ref="CanvasRef"></BECanvas>
+</div>
+
+@code {
+    private string Name{ get; set; }
+
+    private string RoomName{ get; set; }
+
+    public HubConnection hubConnection { get; set; }
+
+    private Field BallField = new Field();
+
+    private Canvas2DContext ctx;
+
+    protected BECanvasComponent CanvasRef;
+
+    private string LoginId { get; set; }
+
+    private DateTime LastRender;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        LoginId = Guid.NewGuid().ToString();    //Fake Login ID
+
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(_navigationManager.ToAbsoluteUri("/chathub"))
+            .Build();
+
+        hubConnection.On<RoomInfo, UserInfo, UpdateUserPos>("OnJoinRoom", (room, user, pos) =>
+        {
+            Console.WriteLine($"WS - OnJoinRoom");
+            if(user.Id == LoginId)
+            {
+                Name = user.Name;
+                RoomName = room.Name;
+                StateHasChanged();
+            }
+            else
+            {
+                BallField.AddUser(user.Id,user.Name, pos.PosX, pos.PosY);
+            }
+        });
+
+        hubConnection.On<UserInfo,List<UpdateUserPos>>("OnSyncRoom", (user, updateUserPos) =>
+        {
+            Console.WriteLine($"WS - OnSyncRoom");
+            if(user.Id == LoginId)
+            {
+                 foreach(var pos in updateUserPos)
+                 {
+                     BallField.AddUser(pos.Id, pos.Name, pos.PosX, pos.PosY);
+                 }
+            }
+        });
+        
+        hubConnection.On<UpdateUserPos>("OnUpdateUserPos", (userPos) =>
+        {
+            BallField.UpdateUserPos(userPos);
+        });
+
+        hubConnection.On<LeaveRoom>("OnLeaveRoom", (room) =>
+        {
+            Console.WriteLine($"WS - OnLeaveRoom");
+            BallField.RemoveUser(room.UserInfo.Id);
+        });
+
+        await hubConnection.StartAsync();
+
+        JoinRoom sendMsg = new JoinRoom()
+        {
+            UserInfo = new UserInfo(){Name="user", Id= LoginId},
+            RoomInfo = new RoomInfo(){Name="room1"}
+        };
+
+        SyncRoom syndMsg = new SyncRoom()
+        {
+            UserInfo = new UserInfo(){Name="user", Id= LoginId},
+            RoomInfo = new RoomInfo(){Name="room1"}
+        };
+
+        await hubConnection.SendAsync("JoInRoom", sendMsg);
+
+        await hubConnection.SendAsync("SyncRoom", syndMsg);
+
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        this.ctx = await CanvasRef.CreateCanvas2DAsync();
+        await JsRuntime.InvokeAsync<object>("initRenderJS", DotNetObjectReference.Create(this));
+        await base.OnInitializedAsync();
+    }
+
+    [JSInvokable]
+    public void ResizeInBlazor(double width, double height) => BallField.Resize(width, height);
+
+    [JSInvokable]
+    public async ValueTask RenderInBlazor(float timeStamp)
+    {
+        double fps = 1.0 / (DateTime.Now - LastRender).TotalSeconds;
+        LastRender = DateTime.Now;
+
+        await this.ctx.BeginBatchAsync();
+        await this.ctx.ClearRectAsync(0, 0, BallField.Width, BallField.Height);
+        await this.ctx.SetFillStyleAsync("#003366");
+        await this.ctx.FillRectAsync(0, 0, BallField.Width, BallField.Height);
+        await this.ctx.SetFontAsync("26px Segoe UI");
+        await this.ctx.SetFillStyleAsync("#FFFFFF");
+        await this.ctx.FillTextAsync("Blazor WebAssembly + HTML Canvas", 10, 30);
+        await this.ctx.SetFontAsync("16px consolas");
+        await this.ctx.FillTextAsync($"FPS: {fps:0.000}", 10, 50);
+        await this.ctx.SetStrokeStyleAsync("#FFFFFF");
+
+        await this.ctx.SetFontAsync("12px consolas");
+        await this.ctx.SetStrokeStyleAsync("#FFFFFF");
+
+        foreach (var ball in BallField.Balls)
+        {
+            await this.ctx.FillTextAsync($"{ball.Name}", ball.X -10, ball.Y -20);
+            await this.ctx.BeginPathAsync();
+            await this.ctx.ArcAsync(ball.X, ball.Y, ball.Radius, 0, 2 * Math.PI, false);
+            await this.ctx.SetFillStyleAsync(ball.Color);
+            await this.ctx.FillAsync();
+            await this.ctx.StrokeAsync();
+        }
+        await this.ctx.EndBatchAsync();
+    }
+
+    protected async Task KeyUp()
+    {
+        UpdateUserPos updatePos = new UpdateUserPos()
+        {
+            Id = LoginId,
+            PosY = -5,
+            PosX = 0
+        };
+        await hubConnection.SendAsync("UpdateUserPos", updatePos);
+    }
+    protected async Task KeyDown()
+    {
+        UpdateUserPos updatePos = new UpdateUserPos()
+        {
+            Id = LoginId,
+            PosY = 5,
+            PosX = 0
+        };
+        await hubConnection.SendAsync("UpdateUserPos", updatePos);
+    }
+    protected async Task KeyLeft()
+    {
+        UpdateUserPos updatePos = new UpdateUserPos()
+        {
+            Id = LoginId,
+            PosY = 0,
+            PosX = -5
+        };
+        await hubConnection.SendAsync("UpdateUserPos", updatePos);
+    }
+    protected async Task KeyRight()
+    {
+        UpdateUserPos updatePos = new UpdateUserPos()
+        {
+            Id = LoginId,
+            PosY = 0,
+            PosX = 5
+        };
+        await hubConnection.SendAsync("UpdateUserPos", updatePos);        
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            LeaveRoom leaveRoom = new LeaveRoom()
+            {
+                UserInfo = new UserInfo(){Name=Name, Id= LoginId},
+                RoomInfo = new RoomInfo(){Name=RoomName}                
+            };
+            await hubConnection.SendAsync("LeaveRoom", leaveRoom);
+
+            await hubConnection.DisposeAsync();
+        }
+    }
+
+}
