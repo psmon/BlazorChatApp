@@ -126,6 +126,8 @@
         double fps = 1.0 / (DateTime.Now - LastRender).TotalSeconds;
         LastRender = DateTime.Now;
 
+        BallField.StepForward();
+
         await this.ctx.BeginBatchAsync();
         await this.ctx.ClearRectAsync(0, 0, BallField.Width, BallField.Height);
         await this.ctx.SetFillStyleAsync("#003366");
@@ -152,12 +154,14 @@
         await this.ctx.EndBatchAsync();
     }
 
+    private int increaseDelta = 20;
+
     protected async Task KeyUp()
     {
         UpdateUserPos updatePos = new UpdateUserPos()
         {
             Id = LoginId,
-            PosY = -5,
+            PosY = -increaseDelta,
             PosX = 0
         };
         await hubConnection.SendAsync("UpdateUserPos", updatePos);
@@ -167,7 +171,7 @@
         UpdateUserPos updatePos = new UpdateUserPos()
         {
             Id = LoginId,
-            PosY = 5,
+            PosY = increaseDelta,
             PosX = 0
         };
         await hubConnection.SendAsync("UpdateUserPos", updatePos);
@@ -178,7 +182,7 @@
         {
             Id = LoginId,
             PosY = 0,
-            PosX = -5
+            PosX = -increaseDelta
         };
         await hubConnection.SendAsync("UpdateUserPos", updatePos);
     }
@@ -188,7 +192,7 @@
         {
             Id = LoginId,
             PosY = 0,
-            PosX = 5
+            PosX = increaseDelta
         };
         await hubConnection.SendAsync("UpdateUserPos", updatePos);        
     }

@@ -18,15 +18,43 @@ namespace BlazorChatApp.Client.Model
         public double Radius { get; private set; }
         public string Color { get; private set; }
 
+        public double TargetX { get; private set; }
+        public double TargetY { get; private set; }
+
         public Ball(string id, string name, double x, double y, double xVel, double yVel, double radius, string color)
         {
             (Id, Name, X, Y, XVel, YVel, Radius, Color) = (id, name, x, y, xVel, yVel, radius, color);
+
+            TargetX = x;
+            TargetY = y;
         }
 
-        public void MoveForward(double Xvel,double Yvel)
+        public void MoveForward(double _Xvel,double _Yvel)
         {
-            X += Xvel;
-            Y += Yvel;
+            TargetX = X+_Xvel;
+            TargetY = Y+_Yvel;
+        }
+
+        public void StepForward()
+        {
+            if( TargetX-X > 1)
+            {
+                X+=XVel;
+            }
+            else if( X-TargetX > 1)
+            {
+                X-=XVel;
+            }
+
+            if( TargetY-Y > 1)
+            {
+                Y+=YVel;
+            }
+            else if( Y-TargetY > 1)
+            {
+                Y-=YVel;
+            }
+
         }
 
         public void StepForward(double width, double height)

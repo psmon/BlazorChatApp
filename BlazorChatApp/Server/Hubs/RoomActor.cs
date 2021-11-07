@@ -1,15 +1,15 @@
-﻿using Akka.Actor;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
+
+using Akka.Actor;
 using Akka.Event;
 
 using BlazorChatApp.Shared;
 
 using Microsoft.AspNetCore.SignalR.Client;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace BlazorChatApp.Server.Hubs
 {
@@ -85,7 +85,7 @@ namespace BlazorChatApp.Server.Hubs
                     Color=RandomColor
                 };
 
-                await OnSyncRoom(userInfo, users.Values.ToList());
+                await OnSyncRoom(userInfo, updateUserPosList);
 
             });
 

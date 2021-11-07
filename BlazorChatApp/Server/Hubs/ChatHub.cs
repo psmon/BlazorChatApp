@@ -1,12 +1,11 @@
-﻿using Akka.Actor;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+
+using Akka.Actor;
 
 using BlazorChatApp.Shared;
 
 using Microsoft.AspNetCore.SignalR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace BlazorChatApp.Server.Hubs
 {

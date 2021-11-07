@@ -20,7 +20,7 @@ namespace BlazorChatApp.Client.Model
         public void StepForward()
         {
             foreach (Ball ball in Balls)
-                ball.StepForward(Width, Height);
+                ball.StepForward();
         }
 
         private double RandomVelocity(Random rand, double min, double max)
@@ -37,8 +37,8 @@ namespace BlazorChatApp.Client.Model
 
         public void AddUser(string id, string name, double posx,double posy)
         {
-            double minSpeed = .5;
-            double maxSpeed = 5;
+            double minSpeed = .2;
+            double maxSpeed = .5;
             double radius = 10;
             Random rand = new Random();
 
@@ -49,8 +49,8 @@ namespace BlazorChatApp.Client.Model
                     new Ball(id,name,
                         x: posx,
                         y: posy,
-                        xVel: RandomVelocity(rand, minSpeed, maxSpeed),
-                        yVel: RandomVelocity(rand, minSpeed, maxSpeed),
+                        xVel: minSpeed,
+                        yVel: minSpeed,
                         radius: radius,
                         color: RandomColor(rand)
                     )
