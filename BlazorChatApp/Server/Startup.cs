@@ -7,7 +7,11 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
+using System;
 using System.Linq;
+
+using IApplicationLifetime = Microsoft.Extensions.Hosting.IApplicationLifetime;
 
 namespace BlazorChatApp.Server
 {
@@ -17,6 +21,8 @@ namespace BlazorChatApp.Server
         {
             Configuration = configuration;
         }
+
+        readonly string CorsOrigins = "CorsOrigins";
 
         public IConfiguration Configuration { get; }
 
@@ -36,13 +42,22 @@ namespace BlazorChatApp.Server
             var actorSystem = ActorSystem.Create("AkkaDotBootSystem");
             services.AddSingleton(actorSystem);
 
-            //結持失~
-            var roomActor = actorSystem.ActorOf(Props.Create(() => new RoomActor("room1")),"room1");
+            services.AddCors(options =>
+            {
+                options.AddPolicy(CorsOrigins,
+                    builder => builder.AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader());
+            });
+
+            var envName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+
+            Console.WriteLine($"Start Server {envName}");
 
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IApplicationLifetime lifetime)
         {
             app.UseResponseCompression();
 
@@ -61,6 +76,8 @@ namespace BlazorChatApp.Server
 
             app.UseRouting();
 
+            app.UseCors(CorsOrigins);
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapBlazorHub();
@@ -69,6 +86,21 @@ namespace BlazorChatApp.Server
                 endpoints.MapControllers();            
                 endpoints.MapFallbackToFile("index.html");
             });
+
+            lifetime.ApplicationStarted.Register(async () =>
+            {
+                var actorSystem = app.ApplicationServices.GetService<ActorSystem>();
+                var serviceScopeFactory = app.ApplicationServices.GetService<IServiceScopeFactory>();
+                //結持失~
+                var roomActor = actorSystem.ActorOf(Props.Create(() => new RoomActor("room1", serviceScopeFactory)),"room1");
+            });
+
+            lifetime.ApplicationStopping.Register(() =>
+            {
+                app.ApplicationServices.GetService<ActorSystem>().Terminate().Wait();
+            });
+
+
         }
     }
 }

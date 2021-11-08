@@ -9,7 +9,9 @@ using Akka.Event;
 
 using BlazorChatApp.Shared;
 
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BlazorChatApp.Server.Hubs
 {
@@ -23,17 +25,14 @@ namespace BlazorChatApp.Server.Hubs
 
         private int userAutoNo = 0;
 
-        public HubConnection hubConnection { get; set; }
+        private readonly IServiceScopeFactory scopeFactory;
+        
 
         Random random= new Random();
 
-        public RoomActor(string _roomName)
+        public RoomActor(string _roomName, IServiceScopeFactory _scopeFactory)
         {
-            string baseUrl = "http://localhost:5000";
-            var _hubUrl = baseUrl.TrimEnd('/') + "/chathub";
-            hubConnection = new HubConnectionBuilder().WithUrl(_hubUrl).Build();
-
-            hubConnection.StartAsync().Wait();
+            scopeFactory = _scopeFactory;            
 
             roomName = _roomName;
 
@@ -126,23 +125,38 @@ namespace BlazorChatApp.Server.Hubs
 
         public async Task OnJoinRoom(RoomInfo roomInfo, UserInfo user, UpdateUserPos updateUserPos)
         {
-            await hubConnection.SendAsync("OnJoinRoom", user, roomInfo, updateUserPos);
+            using(var scope = scopeFactory.CreateScope())
+            {
+                var wsHub = scope.ServiceProvider.GetRequiredService<IHubContext<ChatHub>>();
+                await wsHub.Clients.All.SendAsync("OnJoinRoom", user, roomInfo, updateUserPos);
+            }            
         }
 
         public async Task OnSyncRoom(UserInfo user, List<UpdateUserPos> updateUserPos )
         {
-            await hubConnection.SendAsync("OnSyncRoom", user, updateUserPos);
+            using(var scope = scopeFactory.CreateScope())
+            {
+                var wsHub = scope.ServiceProvider.GetRequiredService<IHubContext<ChatHub>>();
+                await wsHub.Clients.All.SendAsync("OnSyncRoom", user, updateUserPos);
+            }
         }
 
         public async Task OnLeaveRoom(LeaveRoom leaveRoom)
         {
-            await hubConnection.SendAsync("OnLeaveRoom", leaveRoom);
+            using(var scope = scopeFactory.CreateScope())
+            {
+                var wsHub = scope.ServiceProvider.GetRequiredService<IHubContext<ChatHub>>();
+                await wsHub.Clients.All.SendAsync("OnLeaveRoom", leaveRoom);
+            }            
         }
 
         public async Task OnUpdateUserPos(UpdateUserPos updatePos)
         {
-            await hubConnection.SendAsync("OnUpdateUserPos", updatePos);
+            using(var scope = scopeFactory.CreateScope())
+            {
+                var wsHub = scope.ServiceProvider.GetRequiredService<IHubContext<ChatHub>>();
+                await wsHub.Clients.All.SendAsync("OnUpdateUserPos", updatePos);
+            }            
         }
-
     }
 }

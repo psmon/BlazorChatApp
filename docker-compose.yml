@@ -1,0 +1,18 @@
+# Please refer https://aka.ms/HTTPSinContainer on how to setup an https developer certificate for your ASP .NET Core service.
+version: '3.4'
+
+services:
+  blazorServer:
+    image: registry.webnori.com/BlazorChatAppServer:dev
+    build:
+      context: .
+      dockerfile: BlazorChatApp/Server/Dockerfile
+    ports:
+      - 4080:80      
+  blazorClient:
+    image: registry.webnori.com/BlazorChatAppClient:dev
+    build:
+      context: .
+      dockerfile: BlazorChatApp/Client/Dockerfile
+    ports:
+      - 5080:80      

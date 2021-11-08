@@ -45,7 +45,7 @@ namespace BlazorChatApp.Server.Hubs
         }
 
         // Server To Client
-
+        /*
         public async Task OnJoinRoom(RoomInfo roomInfo, UserInfo user, UpdateUserPos updateUserPos)
         {
             await Clients.All.SendAsync("OnJoinRoom", user, roomInfo, updateUserPos);
@@ -76,6 +76,7 @@ namespace BlazorChatApp.Server.Hubs
         {
             roomActor.Tell(roomCmd);        
         }
+        */
 
     }
 }

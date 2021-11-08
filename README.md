@@ -12,3 +12,21 @@ Blazor + SigralR + Actor(Akka.net)를 이용한 그래픽 채팅앱입니다.
 - https://docs.microsoft.com/ko-kr/aspnet/core/tutorials/signalr-blazor?view=aspnetcore-6.0&tabs=visual-studio&pivots=server
 - https://wiki.webnori.com/display/webfr/Blazor+With+AKKA
 
+
+# Blazor StandAloe Docker
+
+## 빌드
+
+	docker-compose up --build
+
+	http://localhost:4080
+
+	host.docker.internal
+
+## 배포
+
+	docker push registry.webnori.com/BlazorChatAppServer:dev
+
+	docker push registry.webnori.com/BlazorChatAppClient:dev
+
+
