@@ -128,7 +128,7 @@ namespace BlazorChatApp.Server.Hubs
             using(var scope = scopeFactory.CreateScope())
             {
                 var wsHub = scope.ServiceProvider.GetRequiredService<IHubContext<ChatHub>>();
-                await wsHub.Clients.All.SendAsync("OnJoinRoom", user, roomInfo, updateUserPos);
+                await wsHub.Clients.All.SendAsync("OnJoinRoom", roomInfo, user, updateUserPos);
             }            
         }
 

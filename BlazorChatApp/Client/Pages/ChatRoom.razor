@@ -81,6 +81,7 @@
         
         hubConnection.On<UpdateUserPos>("OnUpdateUserPos", (userPos) =>
         {
+            Console.WriteLine($"WS - OnUpdateUserPos");
             BallField.UpdateUserPos(userPos);
         });
 
