@@ -3,14 +3,14 @@ version: '3.4'
 
 services:
   blazorServer:
-    image: registry.webnori.com/BlazorChatAppServer:dev
+    image: registry.webnori.com/blazor-chatapp-server:dev
     build:
       context: .
       dockerfile: BlazorChatApp/Server/Dockerfile
     ports:
       - 4080:80      
   blazorClient:
-    image: registry.webnori.com/BlazorChatAppClient:dev
+    image: registry.webnori.com/blazor-chatapp-client:dev
     build:
       context: .
       dockerfile: BlazorChatApp/Client/Dockerfile

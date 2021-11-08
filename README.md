@@ -25,8 +25,8 @@ Blazor + SigralR + Actor(Akka.net)를 이용한 그래픽 채팅앱입니다.
 
 ## 배포
 
-	docker push registry.webnori.com/BlazorChatAppServer:dev
+	docker push registry.webnori.com/blazor-chatapp-server:dev
 
-	docker push registry.webnori.com/BlazorChatAppClient:dev
+	docker push registry.webnori.com/blazor-chatapp-client:dev
 
 
