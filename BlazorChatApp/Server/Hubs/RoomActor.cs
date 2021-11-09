@@ -124,8 +124,28 @@ namespace BlazorChatApp.Server.Hubs
 
                 await OnUpdateUserPos(updateUserPos);
 
-            });
+            });            
 
+            Receive<Disconnect>(async cmd => {                
+                string jsonString = JsonSerializer.Serialize(cmd);
+                log.Info("Received Disconnect message: {0}", jsonString);
+                var disconnectUser = users.Values.Where(e=> e.ConnectionId == cmd.ConnectionId).FirstOrDefault();
+
+                if(disconnectUser != null)
+                {
+                    if(users.ContainsKey(disconnectUser.Id))
+                    {
+                        users.Remove(disconnectUser.Id);
+
+                        var leaveMsg = new LeaveRoom()
+                        {
+                            UserInfo = new UserInfo(){ Id =disconnectUser.Id }
+                        
+                        };
+                        await OnLeaveRoom(leaveMsg);
+                    }
+                }
+            });
 
             Receive<LeaveRoom>(async cmd => {                
                 string jsonString = JsonSerializer.Serialize(cmd);

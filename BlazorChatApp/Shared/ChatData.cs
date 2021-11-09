@@ -55,6 +55,11 @@
         public UserInfo UserInfo { get; set; }
     }
 
+    public class Disconnect
+    {
+        public string ConnectionId {get;set; }
+    }
+
 
     public class BaseCmd
     {

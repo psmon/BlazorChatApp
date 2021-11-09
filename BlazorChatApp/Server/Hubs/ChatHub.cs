@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Akka.Actor;
@@ -19,6 +20,12 @@ namespace BlazorChatApp.Server.Hubs
         {
             actorSystem = _actorSystem;
             roomActor = actorSystem.ActorSelection("user/room1");
+        }
+
+        public override Task OnDisconnectedAsync(Exception e) 
+        {
+            roomActor.Tell(new Disconnect(){ ConnectionId = Context.ConnectionId });            
+            return Task.CompletedTask;
         }
 
         
