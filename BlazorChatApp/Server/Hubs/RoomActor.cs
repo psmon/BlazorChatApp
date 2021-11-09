@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 
+
 namespace BlazorChatApp.Server.Hubs
 {
     public class RoomActor : ReceiveActor
@@ -60,7 +61,8 @@ namespace BlazorChatApp.Server.Hubs
                 { 
                     Id=cmd.UserInfo.Id,
                     Name=$"User-{userAutoNo}",
-                    PosX=random.NextDouble()*500,PosY=random.NextDouble()*500
+                    PosX=random.NextDouble()*500,PosY=random.NextDouble()*500,
+                    ConnectionId = cmd.ConnectionId
                 };
 
                 users[cmd.UserInfo.Id] = updateUserPos;

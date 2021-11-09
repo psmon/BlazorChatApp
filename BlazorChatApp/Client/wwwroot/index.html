@@ -22,7 +22,20 @@
     <script src="_framework/blazor.webassembly.js"></script>
     <script src="_content/Blazor.Extensions.Canvas/blazor.extensions.canvas.js"></script>
     <script>
+        const FRAMES_PER_SECOND = 60;  // Valid values are 60,30,20,15,10...
+        // set the mim time to render the next frame
+        const FRAME_MIN_TIME = (1000 / 60) * (60 / FRAMES_PER_SECOND) - (1000 / 60) * 0.5;
+        var lastFrameTime = 0;  // the last frame time
+
         function renderJS(timeStamp) {
+            if (timeStamp - lastFrameTime < FRAME_MIN_TIME) { //skip the frame if the call is too early
+                //theInstance.invokeMethodAsync('RenderInBlazor', timeStamp);
+                window.requestAnimationFrame(renderJS);
+                return; // return as there is nothing to do
+            }
+            lastFrameTime = timeStamp; // remember the time of the rendered frame
+
+            // render the frame
             theInstance.invokeMethodAsync('RenderInBlazor', timeStamp);
             window.requestAnimationFrame(renderJS);
         }
@@ -41,7 +54,7 @@
             window.theInstance = instance;
             window.addEventListener("resize", resizeCanvasToFitWindow);
             resizeCanvasToFitWindow();
-            window.requestAnimationFrame(renderJS);
+            window.requestAnimationFrame(renderJS);            
         };
     </script>
 

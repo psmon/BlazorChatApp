@@ -26,6 +26,8 @@ namespace BlazorChatApp.Server.Hubs
 
         public async Task JoInRoom(JoinRoom joinRoom)
         {
+            joinRoom.ConnectionId = Context.ConnectionId;
+
             roomActor.Tell(joinRoom);
         }
 

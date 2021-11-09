@@ -22,6 +22,8 @@
     { 
         public double PosX{get; set; }
         public double PosY{get; set; }
+
+        public string ConnectionId {get;set; }
         
     }
 
@@ -36,6 +38,9 @@
     {
         public RoomInfo RoomInfo { get; set; }
         public UserInfo UserInfo { get; set; }
+
+        public string ConnectionId {get;set; }
+
     }
 
     public class SyncRoom
