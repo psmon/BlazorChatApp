@@ -15,18 +15,20 @@ Blazor + SigralR + Actor(Akka.net)를 이용한 그래픽 채팅앱입니다.
 
 # Blazor StandAloe Docker
 
-## 빌드
+## 로컬빌드
 
 	docker-compose up --build
 
 	http://localhost:4080
 
-	host.docker.internal
 
 ## 배포
 
 	docker push registry.webnori.com/blazor-chatapp-server:dev
 
 	docker push registry.webnori.com/blazor-chatapp-client:dev
+
+
+	http://sam.webnori.com/
 
 
