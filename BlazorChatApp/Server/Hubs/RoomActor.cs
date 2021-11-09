@@ -88,6 +88,21 @@ namespace BlazorChatApp.Server.Hubs
 
             });
 
+            Receive<ChatMessage>(async cmd => {           
+                userAutoNo++;
+                string jsonString = JsonSerializer.Serialize(cmd);
+                log.Info("Received ChatMessage message: {0}", jsonString);
+
+                ChatMessage chatMessage = new ChatMessage()
+                { 
+                    From = cmd.From,
+                    Message = cmd.Message
+                };
+
+                await OnChatMessage(chatMessage);
+
+            });
+
             Receive<UpdateUserPos>(async cmd => { 
                 string jsonString = JsonSerializer.Serialize(cmd);
                 log.Info("Received SyncRoom message: {0}", jsonString);
@@ -156,6 +171,15 @@ namespace BlazorChatApp.Server.Hubs
             {
                 var wsHub = scope.ServiceProvider.GetRequiredService<IHubContext<ChatHub>>();
                 await wsHub.Clients.All.SendAsync("OnUpdateUserPos", updatePos);
+            }            
+        }
+
+        public async Task OnChatMessage(ChatMessage chatMessage)
+        {
+            using(var scope = scopeFactory.CreateScope())
+            {
+                var wsHub = scope.ServiceProvider.GetRequiredService<IHubContext<ChatHub>>();
+                await wsHub.Clients.All.SendAsync("OnChatMessage", chatMessage);
             }            
         }
     }

@@ -8,19 +8,12 @@
 @implements IAsyncDisposable
 @inject IJSRuntime JsRuntime;
 
-<p>MyName: @Name , RoomName : @RoomName </p>
-<button @onclick="KeyUp">
-    Up
-</button>
-<button @onclick="KeyDown">
-    Down
-</button>
-<button @onclick="KeyLeft">
-    Left
-</button>
-<button @onclick="KeyRight">
-    Right
-</button>
+<p>MyName: @Name , RoomName : @RoomName , 채팅창에 방향키누르면 움직입니다. </p>
+
+<input type="text" @onkeydown="KeyboardEventHandler " @onkeypress=" KeyboardEventHandler " @onkeyup="KeyboardEventHandler " @bind="ChatMessageText" />
+<h6>@KeyPressed </h6>
+<h6>@EventInfo</h6>
+
 
 <div id="canvasHolder" style="position: fixed; width: 80%; height: 80%" >
     <BECanvas Width="600" Height="400" @ref="CanvasRef"></BECanvas>
@@ -68,17 +61,24 @@
         });
 
         hubConnection.On<UserInfo,List<UpdateUserPos>>("OnSyncRoom", (user, updateUserPos) =>
+               {
+                   Console.WriteLine($"WS - OnSyncRoom");
+                   if(user.Id == LoginId)
+                   {
+                       foreach(var pos in updateUserPos)
+                       {
+                           BallField.AddUser(pos.Id, pos.Name, pos.PosX, pos.PosY);
+                       }
+                   }
+               });
+
+        //ChatMessage
+        hubConnection.On<ChatMessage>("OnChatMessage", (chatMessage) =>
         {
-            Console.WriteLine($"WS - OnSyncRoom");
-            if(user.Id == LoginId)
-            {
-                 foreach(var pos in updateUserPos)
-                 {
-                     BallField.AddUser(pos.Id, pos.Name, pos.PosX, pos.PosY);
-                 }
-            }
+            Console.WriteLine($"WS - OnChatMessage");
+            BallField.ChatMessage(chatMessage);
         });
-        
+
         hubConnection.On<UpdateUserPos>("OnUpdateUserPos", (userPos) =>
         {
             Console.WriteLine($"WS - OnUpdateUserPos");
@@ -140,12 +140,20 @@
         await this.ctx.FillTextAsync($"FPS: {fps:0.000}", 10, 50);
         await this.ctx.SetStrokeStyleAsync("#FFFFFF");
 
-        await this.ctx.SetFontAsync("12px consolas");
+        await this.ctx.SetFontAsync("12px 바탕체");
         await this.ctx.SetStrokeStyleAsync("#FFFFFF");
 
         foreach (var ball in BallField.Balls)
         {
-            await this.ctx.FillTextAsync($"{ball.Name}", ball.X -10, ball.Y -20);
+            if (!string.IsNullOrEmpty(ball.ChatMessage))
+            {
+                await this.ctx.FillTextAsync($"{ball.Name} - {ball.ChatMessage}", ball.X -10, ball.Y -20);
+            }
+            else
+            {
+                await this.ctx.FillTextAsync($"{ball.Name}", ball.X -10, ball.Y -20);
+            }
+
             await this.ctx.BeginPathAsync();
             await this.ctx.ArcAsync(ball.X, ball.Y, ball.Radius, 0, 2 * Math.PI, false);
             await this.ctx.SetFillStyleAsync(ball.Color);
@@ -156,6 +164,51 @@
     }
 
     private int increaseDelta = 20;
+
+    string KeyPressed = "";
+    string EventInfo = "";
+
+    private string ChatMessageText;
+
+    private async Task KeyboardEventHandler(KeyboardEventArgs args)
+    {
+        KeyPressed = "Key Pressed is " + args.Key;
+        //EventInfo = "Event Type " + args.Type;
+
+        switch (args.Key)
+        {
+            case "ArrowUp":
+            KeyUp();
+            break;
+            case "ArrowDown":
+            KeyDown();
+            break;
+            case "ArrowLeft":
+            KeyLeft();
+            break;
+            case "ArrowRight":
+            KeyRight();
+            break;
+            case "Enter":
+            if (!string.IsNullOrWhiteSpace(ChatMessageText))
+            {   
+                EventInfo = ChatMessageText;
+                await SendChatMessage(ChatMessageText);
+            }
+            break;
+        }
+    }
+
+    protected async Task SendChatMessage(string chatMessage)
+    {
+        ChatMessage sendChat = new ChatMessage()
+        {
+            From = new UserInfo(){ Id=LoginId },
+            Message = chatMessage
+        };
+        await hubConnection.SendAsync("ChatMessage", sendChat);
+        ChatMessageText = string.Empty;
+    }
 
     protected async Task KeyUp()
     {

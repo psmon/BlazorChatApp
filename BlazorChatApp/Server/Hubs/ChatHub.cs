@@ -44,6 +44,11 @@ namespace BlazorChatApp.Server.Hubs
             roomActor.Tell(updateUserPos);
         }
 
+        public async Task ChatMessage(ChatMessage chatMessage)
+        {
+            roomActor.Tell(chatMessage);
+        }
+
         // Server To Client
         /*
         public async Task OnJoinRoom(RoomInfo roomInfo, UserInfo user, UpdateUserPos updateUserPos)

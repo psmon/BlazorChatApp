@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using BlazorChatApp.Shared;
+
 namespace BlazorChatApp.Client.Model
 {
     public class Ball
@@ -10,6 +12,8 @@ namespace BlazorChatApp.Client.Model
         public string Id{get;set; }
         public string Name{get;set; }
         public string ChatMessage{get;set; }
+
+        private int ChatViewTime {get;set; }
 
         public double X { get; private set; }
         public double Y { get; private set; }
@@ -35,6 +39,12 @@ namespace BlazorChatApp.Client.Model
             TargetY = Y+_Yvel;
         }
 
+        public void AddChatMessage(ChatMessage chatMessage)
+        {
+            ChatMessage = chatMessage.Message;
+            ChatViewTime = 1000;
+        }
+        
         public void StepForward()
         {
             if( TargetX-X > 1)
@@ -55,6 +65,14 @@ namespace BlazorChatApp.Client.Model
                 Y-=YVel;
             }
 
+            if(!string.IsNullOrEmpty(ChatMessage))
+            {
+                ChatViewTime--;
+                if( 0 > ChatViewTime)
+                {
+                    ChatMessage=string.Empty;
+                }
+            }
         }
 
         public void StepForward(double width, double height)

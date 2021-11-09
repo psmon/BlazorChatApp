@@ -72,5 +72,14 @@ namespace BlazorChatApp.Client.Model
             }
         }
 
+        public void ChatMessage(ChatMessage chatMessage)
+        {
+            var ball = Balls.FirstOrDefault(f=>f.Id.Equals(chatMessage.From.Id));
+            if(ball!=null)
+            {
+                ball.AddChatMessage(chatMessage);
+            }
+        }
+
     }
 }
