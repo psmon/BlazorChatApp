@@ -23,6 +23,9 @@
         public double PosX{get; set; }
         public double PosY{get; set; }
 
+        public double AbsPosX{get; set; }
+        public double AbsPosY{get; set; }
+
         public string ConnectionId {get;set; }
         
     }

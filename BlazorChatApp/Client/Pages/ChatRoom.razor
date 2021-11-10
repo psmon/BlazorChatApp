@@ -10,12 +10,13 @@
 
 <p>MyName: @Name , RoomName : @RoomName , 채팅창에 방향키누르면 움직입니다. </p>
 
-<input type="text" @onkeydown="KeyboardEventHandler " @onkeypress=" KeyboardEventHandler " @onkeyup="KeyboardEventHandler " @bind="ChatMessageText" />
+<input type="text" @onkeydown="KeyboardEventHandler " @onkeypress=" KeyboardEventHandler "  @bind="ChatMessageText" />
 <h6>@KeyPressed </h6>
 <h6>@EventInfo</h6>
 
 
 <div id="canvasHolder" style="position: fixed; width: 80%; height: 80%" >
+    <img @ref="spritesheet" hidden id="spritesheet" src="/img/map1.png" />
     <BECanvas Width="600" Height="400" @ref="CanvasRef"></BECanvas>
 </div>
 
@@ -31,6 +32,8 @@
     private Canvas2DContext ctx;
 
     protected BECanvasComponent CanvasRef;
+
+    ElementReference spritesheet;
 
     private string LoginId { get; set; }
 
@@ -61,16 +64,16 @@
         });
 
         hubConnection.On<UserInfo,List<UpdateUserPos>>("OnSyncRoom", (user, updateUserPos) =>
-               {
-                   Console.WriteLine($"WS - OnSyncRoom");
-                   if(user.Id == LoginId)
-                   {
-                       foreach(var pos in updateUserPos)
-                       {
-                           BallField.AddUser(pos.Id, pos.Name, pos.PosX, pos.PosY);
-                       }
-                   }
-               });
+        {
+            Console.WriteLine($"WS - OnSyncRoom");
+            if(user.Id == LoginId)
+            {
+                foreach(var pos in updateUserPos)
+                {
+                    BallField.AddUser(pos.Id, pos.Name, pos.PosX, pos.PosY);
+                }
+            }
+        });
 
         //ChatMessage
         hubConnection.On<ChatMessage>("OnChatMessage", (chatMessage) =>
@@ -82,6 +85,16 @@
         hubConnection.On<UpdateUserPos>("OnUpdateUserPos", (userPos) =>
         {
             Console.WriteLine($"WS - OnUpdateUserPos");
+
+            //ME
+            if(userPos.Id == LoginId)
+            {
+                var linkinfo = BallField.CollisionCheck(userPos.AbsPosX, userPos.AbsPosY);
+                if (linkinfo != null)
+                {
+                    //var resulut = JSRuntime.InvokeAsync<string>("open", linkinfo.Link.ToString(), "_blank").Result;                    
+                }
+            }
             BallField.UpdateUserPos(userPos);
         });
 
@@ -118,8 +131,8 @@
         await base.OnInitializedAsync();
     }
 
-    [JSInvokable]
-    public void ResizeInBlazor(double width, double height) => BallField.Resize(width, height);
+    //[JSInvokable]
+    //public void ResizeInBlazor(double width, double height) => BallField.Resize(width, height);
 
     [JSInvokable]
     public async ValueTask RenderInBlazor(float timeStamp)
@@ -133,8 +146,12 @@
         await this.ctx.ClearRectAsync(0, 0, BallField.Width, BallField.Height);
         await this.ctx.SetFillStyleAsync("#003366");
         await this.ctx.FillRectAsync(0, 0, BallField.Width, BallField.Height);
+        await this.ctx.DrawImageAsync(spritesheet, 0, 0,BallField.Width,BallField.Height);
+
         await this.ctx.SetFontAsync("26px Segoe UI");
         await this.ctx.SetFillStyleAsync("#FFFFFF");
+
+
         await this.ctx.FillTextAsync("Blazor WebAssembly + HTML Canvas", 10, 30);
         await this.ctx.SetFontAsync("16px consolas");
         await this.ctx.FillTextAsync($"FPS: {fps:0.000}", 10, 50);
@@ -163,7 +180,7 @@
         await this.ctx.EndBatchAsync();
     }
 
-    private int increaseDelta = 20;
+    private int increaseDelta = 50;
 
     string KeyPressed = "";
     string EventInfo = "";

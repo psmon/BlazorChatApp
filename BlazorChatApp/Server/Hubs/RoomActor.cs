@@ -61,7 +61,7 @@ namespace BlazorChatApp.Server.Hubs
                 { 
                     Id=cmd.UserInfo.Id,
                     Name=$"User-{userAutoNo}",
-                    PosX=random.NextDouble()*500,PosY=random.NextDouble()*500,
+                    PosX=random.NextDouble()*300+20,PosY=random.NextDouble()*300+20,
                     ConnectionId = cmd.ConnectionId
                 };
 
@@ -107,19 +107,27 @@ namespace BlazorChatApp.Server.Hubs
 
             Receive<UpdateUserPos>(async cmd => { 
                 string jsonString = JsonSerializer.Serialize(cmd);
-                log.Info("Received SyncRoom message: {0}", jsonString);
+                log.Info("Received UpdateUserPos message: {0}", jsonString);
+
+                double AbsPosX = users[cmd.Id].PosX+cmd.PosX;
+                double AbsPosY= users[cmd.Id].PosY+cmd.PosY;                  
+
                 if(users.ContainsKey(cmd.Id))
                 {
-                    users[cmd.Id].PosX+=cmd.PosX;
-                    users[cmd.Id].PosY+=cmd.PosY;
+                    users[cmd.Id].PosX=AbsPosX;
+                    users[cmd.Id].PosY=AbsPosY;
                 }
+
+                log.Info($"UpdateUser : X=>{AbsPosX} Y=>{AbsPosY}");
 
                 UpdateUserPos updateUserPos = new UpdateUserPos()
                 {
                     Id = cmd.Id,
                     Name = cmd.Name,
                     PosX = cmd.PosX,
-                    PosY = cmd.PosY
+                    PosY = cmd.PosY,
+                    AbsPosX = AbsPosX,
+                    AbsPosY = AbsPosY
                 };
 
                 await OnUpdateUserPos(updateUserPos);
